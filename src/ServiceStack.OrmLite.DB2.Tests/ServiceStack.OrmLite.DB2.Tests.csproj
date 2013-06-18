@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>1f2f1846-b126-4d96-bf02-7716591f59b2</ProjectGuid>
+    <ProjectGuid>{6C68BD04-9F83-4C29-B35A-585DFBCD5BFF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ServiceStack.OrmLite.DB2.Tests</RootNamespace>
