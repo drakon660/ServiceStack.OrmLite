@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Text;
+using ServiceStack.DataAnnotations;
 using ServiceStack.Logging;
 using ServiceStack.Text;
 using System.Diagnostics;
@@ -481,6 +482,7 @@ namespace ServiceStack.OrmLite
 
             foreach (var fieldDef in modelDef.FieldDefinitions)
             {
+                if (fieldDef.IsComputed) continue;
                 if (fieldDef.AutoIncrement) continue;
                 //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
                 if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name)) continue;
@@ -628,6 +630,8 @@ namespace ServiceStack.OrmLite
 
             foreach (var fieldDef in modelDef.FieldDefinitions)
             {
+                if (fieldDef.IsComputed) continue;
+
                 try
                 {
                     if (fieldDef.IsPrimaryKey && updateFields.Count == 0)
@@ -822,9 +826,7 @@ namespace ServiceStack.OrmLite
 
             foreach (var compositeIndex in modelDef.CompositeIndexes)
             {
-                var indexName = GetIndexName(compositeIndex.Unique, modelDef.ModelName.SafeVarName(),
-                    string.Join("_", compositeIndex.FieldNames.ToArray()));
-
+                var indexName = GetCompositeIndexName(compositeIndex, modelDef);
                 var indexNames = string.Join(" ASC, ",
                                              compositeIndex.FieldNames.ConvertAll(
                                                  n => GetQuotedName(n)).ToArray());
@@ -869,6 +871,21 @@ namespace ServiceStack.OrmLite
         protected virtual string GetIndexName(bool isUnique, string modelName, string fieldName)
         {
             return string.Format("{0}idx_{1}_{2}", isUnique ? "u" : "", modelName, fieldName).ToLower();
+        }
+
+        protected virtual string GetCompositeIndexName(CompositeIndexAttribute compositeIndex, ModelDefinition modelDef)
+        {
+            return compositeIndex.Name ?? GetIndexName(compositeIndex.Unique, modelDef.ModelName.SafeVarName(),
+                                                       string.Join("_", compositeIndex.FieldNames.ToArray()));
+        }
+
+        protected virtual string GetCompositeIndexNameWithSchema(CompositeIndexAttribute compositeIndex, ModelDefinition modelDef)
+        {
+            return compositeIndex.Name ?? GetIndexName(compositeIndex.Unique,
+                    (modelDef.IsInSchema ?
+                        modelDef.Schema + "_" + GetQuotedTableName(modelDef) :
+                        GetQuotedTableName(modelDef)).SafeVarName(),
+                    string.Join("_", compositeIndex.FieldNames.ToArray()));
         }
 
         protected virtual string ToCreateIndexStatement(bool isUnique, string indexName, ModelDefinition modelDef, string fieldName, bool isCombined = false)

@@ -81,6 +81,7 @@
 */
 
 string ConnectionStringName = "";
+string Namespace = "";
 string ClassPrefix = "";
 string ClassSuffix = "";
 string SchemaName = null;
@@ -2300,11 +2301,6 @@ public static class Inflector {
     /// <returns></returns>
     public static string ToHumanCase(string lowercaseAndUnderscoredWord) {
         return MakeInitialCaps(Regex.Replace(lowercaseAndUnderscoredWord, @"_", " "));
-    }
-
-    public static string ToPascalCase(string underscoredWords){
-        return UpperCaseFirstCharacter(Regex.Replace(underscoredWords,@"_([a-z])",
-            delegate(Match match){return match.Captures[0].Value.ToUpper();}).Replace("_",""));
     }
 
     /// <summary>
