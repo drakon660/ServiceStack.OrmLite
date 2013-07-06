@@ -9,6 +9,7 @@ namespace ServiceStack.OrmLite.DB2.Tests
         [TestMethod]
         public void TestMethod1()
         {
+            Assert.IsTrue(true);
         }
     }
 }
