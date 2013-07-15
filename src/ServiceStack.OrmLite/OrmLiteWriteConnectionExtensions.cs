@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace ServiceStack.OrmLite
 {
@@ -219,6 +220,19 @@ where T : new()
                 tmpParams.Add(genParam);
             }
             tempParameterizedStatement.Parameters.Clear();
+
+            tmpParams.ForEach(param => Console.WriteLine(param.Value));
+
+            Converter<IDbDataParameter, string> converter = input => { return input.Value.ToString(); };
+
+            var dict = tmpParams.ToDictionary(t => t.ParameterName, t => t.Value.ToString());
+
+           // var array = Array.ConvertAll<IDbDataParameter, string>(tmpParams.ToArray(), converter);
+            string temp = dbCmd.CommandText;
+            foreach (var key in dict)
+            {
+               temp = temp.Replace(key.Key, key.Value);
+            }
 
             tmpParams.ForEach(x => dbCmd.Parameters.Add(x));
         }

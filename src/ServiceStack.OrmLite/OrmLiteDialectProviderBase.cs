@@ -251,7 +251,7 @@ namespace ServiceStack.OrmLite
                    && fieldDefinition != LongColumnDefinition
                    && fieldDefinition != RealColumnDefinition
                    && fieldDefinition != DecimalColumnDefinition
-                   && fieldDefinition != BoolColumnDefinition;
+                   && fieldDefinition != BoolColumnDefinition;                   
         }
 
         public virtual object ConvertDbValue(object value, Type type)

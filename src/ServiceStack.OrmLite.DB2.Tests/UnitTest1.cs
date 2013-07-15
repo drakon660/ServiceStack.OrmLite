@@ -4,12 +4,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ServiceStack.OrmLite.DB2.Tests
 {
     [TestClass]
-    public class UnitTest1
+    public class SelectTest : OrmTestBase
     {
         [TestMethod]
-        public void TestMethod1()
+        public void SelectCount()
         {
-            Assert.IsTrue(true);
+            using (var conn = ConnectionString.OpenDbConnection())
+            {
+                
+            }
         }
     }
 }

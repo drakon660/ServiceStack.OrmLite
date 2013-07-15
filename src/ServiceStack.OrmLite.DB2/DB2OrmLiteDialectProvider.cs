@@ -85,7 +85,7 @@ namespace ServiceStack.OrmLite.DB2
             
             return sql.ToString();
         }
-
+                
         public override bool DoesTableExist(IDbCommand dbCmd, string tableName)
         {
             //if (!QuoteNames & !RESERVED.Contains(tableName.ToUpper()))
@@ -246,10 +246,25 @@ namespace ServiceStack.OrmLite.DB2
             if (fieldType == typeof(decimal))
                 return ((decimal)value).ToString(CultureInfo.InvariantCulture);
 
+            bool should = ShouldQuoteValue(fieldType);
+
             return ShouldQuoteValue(fieldType)
                     ? OrmLiteConfig.DialectProvider.GetQuotedParam(value.ToString())
                     : value.ToString();                    
         }
+
+        public override bool ShouldQuoteValue(Type fieldType)
+        {
+            string fieldDefinition;
+            if (!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
+            {
+                fieldDefinition = this.GetUndefinedColumnDefinition(fieldType, null);
+            }
+
+            return 
+                   fieldDefinition == StringColumnDefinition;
+        }
+
 
         private string Sequence(string modelName, string fieldName, string sequence)
         {
@@ -293,5 +308,53 @@ namespace ServiceStack.OrmLite.DB2
         {
             return new DB2SqlExpressionVisitor<T>();
         }
+
+        public override string GetColumnDefinition(string fieldName, Type fieldType, bool isPrimaryKey, bool autoIncrement, bool isNullable, int? fieldLength, int? scale, string defaultValue)
+        {
+            string fieldDefinition;
+
+            if (fieldType == typeof(string))
+            {
+                //DEFAULT was 8000 changed to 256 -> db2 forbid using varchar length > 1000 as pk
+                fieldDefinition = string.Format(StringLengthColumnDefinitionFormat, fieldLength.GetValueOrDefault(256));
+            }
+            else
+            {
+                if (!DbTypeMap.ColumnTypeMap.TryGetValue(fieldType, out fieldDefinition))
+                {
+                    fieldDefinition = this.GetUndefinedColumnDefinition(fieldType, fieldLength);
+                }
+            }
+
+            var sql = new StringBuilder();
+            sql.AppendFormat("{0} {1}", GetQuotedColumnName(fieldName), fieldDefinition);
+
+            if (isPrimaryKey)
+            {
+                sql.Append(" NOT NULL PRIMARY KEY");
+                if (autoIncrement)
+                {
+                    sql.Append(" ").Append(AutoIncrementDefinition);
+                }
+            }
+            else
+            {
+                if (isNullable)
+                {
+                    sql.Append(" NULL");
+                }
+                else
+                {
+                    sql.Append(" NOT NULL");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(defaultValue))
+            {
+                sql.AppendFormat(DefaultValueFormat, defaultValue);
+            }
+
+            return sql.ToString();
+        }       
     }
 }
