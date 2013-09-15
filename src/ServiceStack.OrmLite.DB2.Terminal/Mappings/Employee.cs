@@ -15,7 +15,7 @@ namespace ServiceStack.OrmLite.DB2.Tests.Mappings
         public string LastName { get; set; }
         public string MidInit { get; set; }
 
-        [ForeignKey(typeof(Depratment), OnDelete = "SET NULL"]
+        //[ForeignKey(typeof(Depratment)), OnDelete = "SET NULL"]
         public string WorkDept { get; set; }
         public string PhoneNo { get; set; }
         public DateTime HireDate { get; set; }
