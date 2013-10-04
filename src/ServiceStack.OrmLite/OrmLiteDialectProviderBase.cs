@@ -669,6 +669,8 @@ namespace ServiceStack.OrmLite
             var updateSql = string.Format("UPDATE {0} SET {1}{2}",
                 GetQuotedTableName(modelDef), sql, (sqlFilter.Length > 0 ? " WHERE " + sqlFilter : ""));
 
+            ReadConnectionExtensions.LastCommandText = updateSql;
+
             if (sql.Length == 0)
                 throw new Exception("No valid update properties provided (e.g. p => p.FirstName): " + updateSql);
             

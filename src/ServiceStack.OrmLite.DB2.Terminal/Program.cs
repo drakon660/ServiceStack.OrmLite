@@ -11,7 +11,7 @@ namespace ServiceStack.OrmLite.DB2.Terminal
 {
     class Program
     {
-        protected static string ConnectionString = "Server=localhost:50000;Database=SAMPLE;UID=admin;PWD=fruy4brEC;";
+        protected static string ConnectionString = "Server=192.168.141.137:50000;Database=SAMPLE;UID=admin;PWD=fruy4brEC;";
         protected OrmLiteConnectionFactory factory;
         private static object Employee;
 
@@ -23,7 +23,24 @@ namespace ServiceStack.OrmLite.DB2.Terminal
                //var emp = conn.Select<Employee>(q=>q.Sex == Sex.F);
 
                //string lastSql = conn.GetLastSql();
+               try
+               {
+                   BatchLog log = conn.Id<BatchLog>(1);
+                   log.BatchStart = DateTime.Now;
+                   //log.Parameters = "TCS4";
 
+                   conn.Save(log);
+
+                   //BatchLog log = BatchLog.Default;
+                   //log.BatchType = "TCS";
+                   //log.Parameters = "TCS4";
+
+                   //conn.Insert(log);
+               }
+               catch (Exception e)
+               {
+                   var t = e;
+               }
                //conn.InsertParam(new Employee { EmpNo = "00035", FirstName = "Jo", LastName = "D" });
 
                //if (!conn.TableExists("Fake"))
@@ -65,7 +82,7 @@ namespace ServiceStack.OrmLite.DB2.Terminal
                //});
 
                //var sql = conn.GetLastSql();
-               conn.UpdateOnly(new Employee { WorkDept = "E66" }, p => p.WorkDept, p => p.FirstName.Contains("Drakon"));
+               //conn.UpdateOnly(new Employee { WorkDept = "E66" }, p => p.WorkDept, p => p.FirstName.Contains("Drakon"));
 
                
            }
@@ -75,6 +92,28 @@ namespace ServiceStack.OrmLite.DB2.Terminal
            var func = expression.Compile(); 
         }
     }
+
+    [Schema("Admin")]
+    public class BatchLog
+    {
+        [PrimaryKey]
+        [Sequence("BATCHLOGID_SEQ")]
+        public int BatchId { get; set; }
+        public string BatchType { get; set; }
+		public DateTime BatchStart { get; set; }
+		public DateTime? BatchEnd  { get; set; }
+		public int DocumentsProcessed { get; set; }
+		public int DocumentsWithError { get; set; }
+		public string Status { get; set; }
+		public string StatusMessage { get; set; }
+		public string Parameters { get; set; }
+
+        public static BatchLog Default
+        {
+            get { return new BatchLog() { BatchStart = DateTime.Now, BatchEnd = null, Status = "RUNNING", StatusMessage = "RUNNING" }; }
+        }
+    }
+
     [Schema("Drakon")]
     public class Fake
     {

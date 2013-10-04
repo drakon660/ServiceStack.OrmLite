@@ -8,6 +8,7 @@ using System.Text;
 using System.Globalization;
 using System.Threading;
 using ServiceStack.Text;
+using ServiceStack.OrmLite;
 
 namespace ServiceStack.OrmLite.DB2
 {
@@ -80,6 +81,8 @@ namespace ServiceStack.OrmLite.DB2
                 }
                 sql.Append(sqlFilter);
             }
+
+            ReadConnectionExtensions.LastCommandText = sql.ToString();
 
             return sql.ToString();
         }
@@ -205,6 +208,8 @@ namespace ServiceStack.OrmLite.DB2
             var sql = string.Format("INSERT INTO {0} ({1}) VALUES ({2}) ",
                                     GetQuotedTableName(modelDef), sbColumnNames, sbColumnValues);
 
+            ReadConnectionExtensions.LastCommandText = sql;
+
             return sql;
         }
         //public override string ToInsertRowStatement(IDbCommand dbCommand, object objWithProperties, IList<string> insertFields =null)
@@ -272,8 +277,7 @@ namespace ServiceStack.OrmLite.DB2
         //                            GetQuotedTableName(modelDef), sbColumnNames, sbColumnValues);
 
         //    return sql;
-        //}
-
+        //}       
         public override string GetQuotedValue(object value, Type fieldType)
         {
             if (value == null) return "NULL";

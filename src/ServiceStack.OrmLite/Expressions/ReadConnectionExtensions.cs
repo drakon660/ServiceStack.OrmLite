@@ -8,7 +8,7 @@ namespace ServiceStack.OrmLite
     public static class ReadConnectionExtensions
     {
         [ThreadStatic]
-        internal static string LastCommandText;
+        public static string LastCommandText;
 
         public static SqlExpressionVisitor<T> CreateExpression<T>(this IDbConnection dbConn) 
         {
