@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using Northwind.Common.DataModel;
 using NUnit.Framework;
-using ServiceStack.DataAccess;
+using ServiceStack.Data;
 using ServiceStack.OrmLite.PostgreSQL;
 
 namespace ServiceStack.OrmLite.Tests
@@ -23,7 +23,7 @@ namespace ServiceStack.OrmLite.Tests
 			var stopWatch = new Stopwatch();
 			stopWatch.Start();
 
-            using (var db = ConnectionString.OpenDbConnection())
+            using (var db = OpenDbConnection())
 			{
                 using (var client = new OrmLitePersistenceProvider(db))
 				{
@@ -35,7 +35,7 @@ namespace ServiceStack.OrmLite.Tests
 			Console.WriteLine("stopWatch.ElapsedMilliseconds: " + stopWatch.ElapsedMilliseconds);
 		}
 
-		private static void LoadNorthwindData(IBasicPersistenceProvider persistenceProvider)
+        private static void LoadNorthwindData(IEntityStore persistenceProvider)
 		{
 			persistenceProvider.StoreAll(NorthwindData.Categories);
 			persistenceProvider.StoreAll(NorthwindData.Customers);

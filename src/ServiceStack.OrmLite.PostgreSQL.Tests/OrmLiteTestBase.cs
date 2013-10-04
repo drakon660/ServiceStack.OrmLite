@@ -1,10 +1,8 @@
 using System;
 using System.Configuration;
-using System.IO;
+using System.Data;
 using NUnit.Framework;
-using ServiceStack.Common.Utils;
 using ServiceStack.Logging;
-using ServiceStack.Logging.Support.Logging;
 using ServiceStack.OrmLite.PostgreSQL;
 
 
@@ -29,5 +27,11 @@ namespace ServiceStack.OrmLite.Tests
 		{
 			Console.WriteLine(text);
 		}
-	}
+    
+        public IDbConnection OpenDbConnection(string connString = null)
+        {
+            connString = connString ?? ConnectionString;
+            return connString.OpenDbConnection();
+        }
+    }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Northwind.Common.DataModel;
 using NUnit.Framework;
-using ServiceStack.DataAccess;
+using ServiceStack.Data;
 
 namespace ServiceStack.OrmLite.MySql.Tests
 {
@@ -21,7 +21,7 @@ namespace ServiceStack.OrmLite.MySql.Tests
 			var stopWatch = new Stopwatch();
 			stopWatch.Start();
 
-            using (var db = ConnectionString.OpenDbConnection())
+            using (var db = OpenDbConnection())
 			{
 				using (var client = new OrmLitePersistenceProvider(db))
 				{
@@ -33,7 +33,7 @@ namespace ServiceStack.OrmLite.MySql.Tests
 			Console.WriteLine("stopWatch.ElapsedMilliseconds: " + stopWatch.ElapsedMilliseconds);
 		}
 
-		private static void LoadNorthwindData(IBasicPersistenceProvider persistenceProvider)
+        private static void LoadNorthwindData(IEntityStore persistenceProvider)
 		{
             persistenceProvider.StoreAll(NorthwindData.Categories);
 			persistenceProvider.StoreAll(NorthwindData.Customers);

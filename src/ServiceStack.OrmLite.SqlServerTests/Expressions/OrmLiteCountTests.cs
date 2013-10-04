@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq.Expressions;
 using NUnit.Framework;
-using ServiceStack.DesignPatterns.Model;
+using ServiceStack.Model;
 
 namespace ServiceStack.OrmLite.SqlServerTests.Expressions
 {
@@ -13,7 +13,7 @@ namespace ServiceStack.OrmLite.SqlServerTests.Expressions
         [Test]
         public void CanDoCountWithInterface()
         {
-            using (var db = ConnectionString.OpenDbConnection())
+            using (var db = OpenDbConnection())
             {
                 db.CreateTable<CountTestTable>(true);
                 db.DeleteAll<CountTestTable>();
@@ -38,7 +38,7 @@ namespace ServiceStack.OrmLite.SqlServerTests.Expressions
         [Test]
         public void CanDoCountWithInterfaceAndPredicate()
         {
-            using (var db = ConnectionString.OpenDbConnection())
+            using (var db = OpenDbConnection())
             {
                 db.CreateTable<CountTestTable>(true);
                 db.DeleteAll<CountTestTable>();

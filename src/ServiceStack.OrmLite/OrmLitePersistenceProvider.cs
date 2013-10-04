@@ -9,13 +9,10 @@
 // Licensed under the same terms of ServiceStack: new BSD license.
 //
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using ServiceStack.Common;
-using ServiceStack.Common.Utils;
-using ServiceStack.DataAccess;
+using ServiceStack.Data;
 
 namespace ServiceStack.OrmLite
 {
@@ -23,7 +20,7 @@ namespace ServiceStack.OrmLite
 	/// Allow for code-sharing between OrmLite, IPersistenceProvider and ICacheClient
 	/// </summary>
 	public class OrmLitePersistenceProvider
-		: IBasicPersistenceProvider
+		: IEntityStore
 	{
 		protected string ConnectionString { get; set; }
 		protected bool DisposeConnection = true;
@@ -35,7 +32,8 @@ namespace ServiceStack.OrmLite
 			{
 				if (connection == null)
 				{
-					connection = this.ConnectionString.OpenDbConnection();
+				    var connStr = this.ConnectionString;
+                    connection = connStr.OpenDbConnection();
 				}
 				return connection;
 			}
@@ -52,35 +50,38 @@ namespace ServiceStack.OrmLite
 			this.DisposeConnection = false;
 		}
 
-		public T GetById<T>(object id)
-			where T : class, new()
+		private IDbCommand CreateCommand()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			var cmd = this.Connection.CreateCommand();
+			cmd.CommandTimeout = OrmLiteConfig.CommandTimeout;
+			return cmd;
+		}
+
+		public T GetById<T>(object id)
+		{
+			using (var dbCmd = CreateCommand())
 			{
 				return dbCmd.GetByIdOrDefault<T>(id);
 			}
 		}
 
 		public IList<T> GetByIds<T>(ICollection ids)
-			where T : class, new()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			{
 				return dbCmd.GetByIds<T>(ids);
 			}
 		}
 
 		public T Store<T>(T entity)
-			where T : class, new()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			{
 				return InsertOrUpdate(dbCmd, entity);
 			}
 		}
 
 		private static T InsertOrUpdate<T>(IDbCommand dbCmd, T entity)
-			where T : class, new()
 		{
 			var id = IdUtils.GetId(entity);
 			var existingEntity = dbCmd.GetByIdOrDefault<T>(id);
@@ -97,9 +98,8 @@ namespace ServiceStack.OrmLite
 		}
 
 		public void StoreAll<TEntity>(IEnumerable<TEntity> entities) 
-			where TEntity : class, new()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			using (var dbTrans = this.Connection.BeginTransaction())
 			{
 				foreach (var entity in entities)
@@ -111,33 +111,32 @@ namespace ServiceStack.OrmLite
 		}
 
 		public void Delete<T>(T entity)
-			where T : class, new()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			{
 				dbCmd.Delete(entity);
 			}
 		}
 
-		public void DeleteById<T>(object id) where T : class, new()
+		public void DeleteById<T>(object id)
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			{
 				dbCmd.DeleteById<T>(id);
 			}
 		}
 
-		public void DeleteByIds<T>(ICollection ids) where T : class, new()
+		public void DeleteByIds<T>(ICollection ids)
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = this.CreateCommand())
 			{
 				dbCmd.DeleteByIds<T>(ids);
 			}
 		}
 
-		public void DeleteAll<TEntity>() where TEntity : class, new()
+		public void DeleteAll<TEntity>()
 		{
-			using (var dbCmd = this.Connection.CreateCommand())
+			using (var dbCmd = CreateCommand())
 			{
 				dbCmd.DeleteAll<TEntity>();
 			}

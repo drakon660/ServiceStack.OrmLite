@@ -1,9 +1,7 @@
-Follow [@demisbellot](http://twitter.com/demisbellot) and [@ServiceStack](http://twitter.com/servicestack)
-for twitter updates. [Ask questions on StackOverflow](http://stackoverflow.com/search?q=servicestack).
+[Join the ServiceStack Google+ group](https://plus.google.com/u/0/communities/112445368900682590445) or
+follow [@servicestack](http://twitter.com/servicestack) for updates.
 
-ServiceStack.OrmLite is a **convention-based, configuration-free lightweight ORM** that uses standard **POCO classes and Data Annotation attributes** to infer its table schema.
-
-ServiceStack.OrmLite is an **independent library** and can be used with or without the ServiceStack webservices framework. 
+# An Open Source Micro ORM for .NET
 
 # Introduction
 
@@ -20,7 +18,7 @@ OrmLite was designed with a focus on the core objectives:
   * Expressive power and flexibility - with access to IDbCommand and raw SQL
   * Cross platform - supports multiple dbs (currently: Sql Server, Sqlite, MySql, PostgreSQL, Firebird) running on both .NET and Mono platforms.
 
-In OrmLite: **1 Class = 1 Table**. There's no hidden behaviour behind the scenes auto-magically managing hidden references to other tables.
+In OrmLite: **1 Class = 1 Table**. There should be no surprising or hidden behaviour.
 Any non-scalar properties (i.e. complex types) are text blobbed in a schema-less text field using [.NET's fastest Text Serializer](http://www.servicestack.net/mythz_blog/?p=176).
 Effectively this allows you to create a table from any POCO type and it should persist as expected in a DB Table with columns for each of the classes 1st level public properties.
 
@@ -41,6 +39,17 @@ Effectively this allows you to create a table from any POCO type and it should p
 
 OrmLite.SqlServer is also included in [ServiceStack](https://github.com/ServiceStack/ServiceStack/downloads).
 
+_Commercial support will be available for ServiceStack, contact team@servicestack.net for details_
+
+## Copying
+
+Since September 2013, ServiceStack source code is available under GNU Affero General Public License/FOSS License Exception, see license.txt in the source. Alternative commercial licensing is also available, contact team@servicestack.net for details.
+
+## Contributing
+
+Commits should be made to the **v3-fixes** branch so they can be merged into both **v3** and **master** (v4) release branches. 
+Contributors need to approve the [Contributor License Agreement](https://docs.google.com/forms/d/16Op0fmKaqYtxGL4sg7w_g-cXXyCoWjzppgkuqzOeKyk/viewform) before any code will be reviewed, see the [Contributing wiki](https://github.com/ServiceStack/ServiceStack/wiki/Contributing) for more details. 
+
 ## Download published NuGet binaries without NuGet
 
 For environments that doesn't have NuGet installed (e.g. OSX/Linux) you can still download the published binaries by 
@@ -50,7 +59,7 @@ extracting them from the published NuGet packages. The url to download a nuget p
     
  So to get the OrmLite MySQL provider in OSX/Linux (or using gnu tools for Windows) you can just do:
 
-    wget -O OrmLite.MySql.zip http://packages.nuget.org/api/v1/package/ServiceStack.OrmLite.MySql/3.9.55
+    wget -O OrmLite.MySql.zip http://packages.nuget.org/api/v1/package/ServiceStack.OrmLite.MySql/3.9.60
     unzip OrmLite.MySql.zip 'lib/*'
 
 which will download and extract the dlls into your local local `lib/` folder.
@@ -93,7 +102,7 @@ Apart from a slight performance increase, parameterized API's now lets you inser
 
 ## New API's to execute custom SQL
 
-Prior to v3.9.55 the ways to execute custom SQL was with `db.ExecuteSql()` which as it only returned an int code, users were using `db.Query` to read arbitrary sql returning tabular resultsets. However db.Query is only intended for SELECT statements. For this purpose we've introduced new API's for executing custom sql, e.g:
+Prior to v3.9.60 the ways to execute custom SQL was with `db.ExecuteSql()` which as it only returned an int code, users were using `db.Query` to read arbitrary sql returning tabular resultsets. However db.Query is only intended for SELECT statements. For this purpose we've introduced new API's for executing custom sql, e.g:
 
 ```csharp
 List<Poco> results = db.SqlList<Poco>("EXEC GetAnalyticsForWeek 1");
@@ -670,7 +679,7 @@ Track track = db.Single<Track>("RefId = {0}", refId)
 Dictionary<int, string> trackIdNamesMap = db.Dictionary<int, string>("select Id, Name from Track")
 ```
 
-**Lookup** returns an `Dictionary<K, List<V>>` made from the first to columns. Alias: `GetLookup`
+**Lookup** returns an `Dictionary<K, List<V>>` made from the first two columns. Alias: `GetLookup`
 
 ```csharp
 Dictionary<int, List<string>> albumTrackNames = db.Lookup<int, string>("select AlbumId, Name from Track")
@@ -958,6 +967,7 @@ As [performance is the most important feature](https://github.com/mythz/ScalingD
 
 # Community Resources
 
+  - [Code Generation using ServiceStack.OrmLite and T4 Text templates](http://jokecamp.wordpress.com/2013/09/07/code-generation-using-servicestack-ormlite-and-t4-text-templates/) by [@jokecamp](https://twitter.com/jokecamp)
   - [Simple ServiceStack OrmLite Example](http://www.curlette.com/?p=1068) by [@robrtc](https://twitter.com/robrtc)
   - [OrmLite Blobbing done with NHibernate and Serialized JSON](http://www.philliphaydon.com/2012/03/ormlite-blobbing-done-with-nhibernate-and-serialized-json/) by [@philliphaydon](https://twitter.com/philliphaydon)
   - [Creating An ASP.NET MVC Blog With ServiceStack.OrmLite](http://www.eggheadcafe.com/tutorials/asp-net/285cbe96-9922-406a-b193-3a0b40e31c40/creating-an-aspnet-mvc-blog-with-servicestackormlite.aspx) by [@peterbromberg](https://twitter.com/peterbromberg)

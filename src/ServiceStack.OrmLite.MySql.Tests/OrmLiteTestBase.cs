@@ -1,8 +1,8 @@
 using System;
 using System.Configuration;
+using System.Data;
 using NUnit.Framework;
 using ServiceStack.Logging;
-using ServiceStack.Logging.Support.Logging;
 
 namespace ServiceStack.OrmLite.MySql.Tests
 {
@@ -23,5 +23,11 @@ namespace ServiceStack.OrmLite.MySql.Tests
 		{
 			Console.WriteLine(text);
 		}
-	}
+
+        public IDbConnection OpenDbConnection(string connString = null)
+        {
+            connString = connString ?? ConnectionString;
+            return connString.OpenDbConnection();
+        }
+    }
 }

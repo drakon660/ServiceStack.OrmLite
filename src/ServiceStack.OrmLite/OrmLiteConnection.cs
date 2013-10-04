@@ -1,8 +1,7 @@
-using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using ServiceStack.DataAccess;
+using ServiceStack.Data;
 
 namespace ServiceStack.OrmLite
 {
@@ -79,6 +78,7 @@ namespace ServiceStack.OrmLite
 
 			var cmd = DbConnection.CreateCommand();
             if(Transaction != null) { cmd.Transaction = Transaction; }
+			cmd.CommandTimeout = OrmLiteConfig.CommandTimeout;
             return cmd;
 		}
 

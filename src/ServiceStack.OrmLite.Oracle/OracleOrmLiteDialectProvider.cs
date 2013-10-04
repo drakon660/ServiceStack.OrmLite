@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
-using ServiceStack.Common.Utils;
+using ServiceStack.Text;
 using System.Text;
-using ServiceStack.Common;
 using System.Data.OracleClient;
 
 namespace ServiceStack.OrmLite.Oracle
@@ -168,20 +167,17 @@ namespace ServiceStack.OrmLite.Oracle
 			return sql.ToString();
 		}
 
-        public override IDbCommand CreateParameterizedInsertStatement(object objWithProperties, IDbConnection connection)
+        public override IDbCommand CreateParameterizedInsertStatement(IDbConnection connection, object objWithProperties, ICollection<string> insertFields = null)
         {
-            return CreateParameterizedInsertStatement(objWithProperties, null, connection);
-        }
+            if (insertFields == null)
+                insertFields = new List<string>();
 
-        public override IDbCommand CreateParameterizedInsertStatement(object objWithProperties, IList<string> insertFields, IDbConnection connection)
-        {
-            if (insertFields == null) insertFields = new List<string>();
             var sbColumnNames = new StringBuilder();
             var sbColumnValues = new StringBuilder();
             var modelDef = GetModel(objWithProperties.GetType());
 
             var dbCommand = connection.CreateCommand();
-
+            dbCommand.CommandTimeout = OrmLiteConfig.CommandTimeout;
             foreach (var fieldDef in modelDef.FieldDefinitions)
             {
                 if (fieldDef.IsComputed) continue;
@@ -206,15 +202,15 @@ namespace ServiceStack.OrmLite.Oracle
 
                     var result = GetNextValue(dbCommand, fieldDef.Sequence, pi.GetValue(objWithProperties, new object[] { }));
                     if (pi.PropertyType == typeof(String))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, result.ToString());
+                        pi.SetProperty(objWithProperties, result.ToString());
                     else if (pi.PropertyType == typeof(Int16))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt16(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt16(result));
                     else if (pi.PropertyType == typeof(Int32))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt32(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt32(result));
                     else if (pi.PropertyType == typeof(Guid))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, result);
+                        pi.SetProperty(objWithProperties, result);
                     else
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt64(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt64(result));
                 }
 
                 //insertFields contains Property "Name" of fields to insert ( that's how expressions work )
@@ -243,8 +239,11 @@ namespace ServiceStack.OrmLite.Oracle
             return dbCommand;
         }
 		
-		public override string ToInsertRowStatement(object objWithProperties, IList<string> insertFields, IDbCommand dbCommand)
+		public override string ToInsertRowStatement(IDbCommand dbCommand, object objWithProperties, ICollection<string> insertFields = null)
 		{
+            if (insertFields == null)
+                insertFields = new List<string>();
+
 			var sbColumnNames = new StringBuilder();
 			var sbColumnValues = new StringBuilder();
 
@@ -276,15 +275,15 @@ namespace ServiceStack.OrmLite.Oracle
 					
 					var result = GetNextValue(dbCommand, fieldDef.Sequence, pi.GetValue(objWithProperties,  new object[] { }) );
 					if (pi.PropertyType == typeof(String))
-						ReflectionUtils.SetProperty(objWithProperties, pi,  result.ToString());	
+                        pi.SetProperty(objWithProperties, result.ToString());	
 					else if(pi.PropertyType == typeof(Int16))
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt16(result));	
+                        pi.SetProperty(objWithProperties, Convert.ToInt16(result));	
 					else if(pi.PropertyType == typeof(Int32))
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt32(result));	
+                        pi.SetProperty(objWithProperties, Convert.ToInt32(result));	
 					else if(pi.PropertyType == typeof(Guid))
-						ReflectionUtils.SetProperty(objWithProperties, pi, result);
+                        pi.SetProperty(objWithProperties, result);
 					else
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt64(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt64(result));
 				}
 				
 				if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
@@ -311,7 +310,7 @@ namespace ServiceStack.OrmLite.Oracle
 		}
 
 		
-		public override string ToUpdateRowStatement(object objWithProperties, IList<string> updateFields)
+		public override string ToUpdateRowStatement(object objWithProperties, ICollection<string> updateFields)
 		{
 			var sqlFilter = new StringBuilder();
 			var sql = new StringBuilder();

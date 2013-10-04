@@ -14,7 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using ServiceStack.Text;
 
 namespace ServiceStack.OrmLite
 {
@@ -22,7 +21,7 @@ namespace ServiceStack.OrmLite
 	{
         public static T CreateInstance<T>()
         {
-            return (T)ReflectionExtensions.CreateInstance<T>();
+            return (T)Text.ReflectionExtensions.CreateInstance<T>();
         }
 
 		public static T ConvertTo<T>(this IDataReader dataReader)
@@ -34,7 +33,8 @@ namespace ServiceStack.OrmLite
 				if (dataReader.Read())
 				{
                     var row = CreateInstance<T>();
-					row.PopulateWithSqlReader(dataReader, fieldDefs, null);
+					var indexCache = dataReader.GetIndexFieldsCache(ModelDefinition<T>.Definition);
+					row.PopulateWithSqlReader(dataReader, fieldDefs, indexCache);
 					return row;
 				}
 				return default(T);
@@ -48,7 +48,7 @@ namespace ServiceStack.OrmLite
 			var to = new List<T>();
 			using (dataReader)
 			{
-                var indexCache = new Dictionary<string, int>();
+				var indexCache = dataReader.GetIndexFieldsCache(ModelDefinition<T>.Definition);
 				while (dataReader.Read())
 				{
                     var row = CreateInstance<T>();
@@ -149,5 +149,23 @@ namespace ServiceStack.OrmLite
 		{
 			return new SqlInValues(values);
 		}
+
+        public static Dictionary<string, int> GetIndexFieldsCache(this IDataReader reader, ModelDefinition modelDefinition = null)
+        {
+            var cache = new Dictionary<string, int>();
+            if (modelDefinition != null)
+            {
+                foreach (var field in modelDefinition.IgnoredFieldDefinitions)
+                {
+                    cache[field.FieldName] = -1;
+                }
+            }
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                cache[reader.GetName(i)] = i;
+            }
+            return cache;
+        }
+
 	}
 }

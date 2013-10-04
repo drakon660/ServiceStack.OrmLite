@@ -26,7 +26,8 @@ namespace ServiceStack.OrmLite.SqlServer
 
                 sql = base.ToSelectStatement();
                 if (sql == null || sql.Length < "SELECT".Length) return sql;
-                sql = "SELECT TOP " + take + " " + sql.Substring("SELECT".Length, sql.Length - "SELECT".Length);
+                var selectType = sql.StartsWithIgnoreCase("SELECT DISTINCT") ? "SELECT DISTINCT" : "SELECT";
+                sql = selectType + " TOP " + take + " " + sql.Substring(selectType.Length, sql.Length - selectType.Length);
                 return sql;
             }
 	        

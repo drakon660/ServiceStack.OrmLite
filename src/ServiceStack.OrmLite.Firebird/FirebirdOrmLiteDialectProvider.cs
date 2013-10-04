@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
-using ServiceStack.Common.Utils;
+using ServiceStack.Text;
 using System.Text;
 using FirebirdSql.Data.FirebirdClient;
-using ServiceStack.Common;
 
 namespace ServiceStack.OrmLite.Firebird
 {
@@ -86,6 +85,9 @@ namespace ServiceStack.OrmLite.Firebird
 				}
 				return new Guid(value.ToString());
 			}
+			
+			if (type == typeof(byte[]) && value.GetType() == typeof(byte[]))
+                		return value;
 
 			try
 			{
@@ -162,9 +164,12 @@ namespace ServiceStack.OrmLite.Firebird
 			return sql.ToString();
 		}
 		
-		public override string ToInsertRowStatement(object objWithProperties, IList<string> insertFields, IDbCommand dbCommand)
+		public override string ToInsertRowStatement(IDbCommand dbCommand, object objWithProperties, ICollection<string> insertFields = null)
 		{
-			var sbColumnNames = new StringBuilder();
+            if (insertFields == null)
+                insertFields = new List<string>();
+
+            var sbColumnNames = new StringBuilder();
 			var sbColumnValues = new StringBuilder();
 
 			var tableType = objWithProperties.GetType();
@@ -194,17 +199,17 @@ namespace ServiceStack.OrmLite.Firebird
                         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
 
 					var result = GetNextValue(dbCommand, fieldDef.Sequence, pi.GetValue(objWithProperties,  new object[] { }) );
-					if (pi.PropertyType == typeof(String))
-						ReflectionUtils.SetProperty(objWithProperties, pi,  result.ToString());	
-					else if(pi.PropertyType == typeof(Int16))
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt16(result));	
-					else if(pi.PropertyType == typeof(Int32))
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt32(result));	
-					else if(pi.PropertyType == typeof(Guid))
-						ReflectionUtils.SetProperty(objWithProperties, pi, result);
-					else
-						ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt64(result));
-				}
+                    if (pi.PropertyType == typeof(String))
+                        pi.SetProperty(objWithProperties, result.ToString());
+                    else if (pi.PropertyType == typeof(Int16))
+                        pi.SetProperty(objWithProperties, Convert.ToInt16(result));
+                    else if (pi.PropertyType == typeof(Int32))
+                        pi.SetProperty(objWithProperties, Convert.ToInt32(result));
+                    else if (pi.PropertyType == typeof(Guid))
+                        pi.SetProperty(objWithProperties, result);
+                    else
+                        pi.SetProperty(objWithProperties, Convert.ToInt64(result));
+                }
 				
 				if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
 				if (sbColumnValues.Length > 0) sbColumnValues.Append(",");
@@ -230,8 +235,11 @@ namespace ServiceStack.OrmLite.Firebird
 		}
 
 		
-		public override string ToUpdateRowStatement(object objWithProperties, IList<string> updateFields)
+		public override string ToUpdateRowStatement(object objWithProperties, ICollection<string> updateFields=null)
 		{
+			if (updateFields == null) 
+				updateFields = new List<string>();
+				
 			var sqlFilter = new StringBuilder();
 			var sql = new StringBuilder();
 			var tableType = objWithProperties.GetType();

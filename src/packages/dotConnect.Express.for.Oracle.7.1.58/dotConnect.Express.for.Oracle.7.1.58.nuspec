@@ -13,5 +13,9 @@
     <summary>dotConnect Express for Oracle is a free of charge enhanced database connectivity solution built over ADO.NET architecture and a development framework with a number of innovative technologies.</summary>
     <copyright>Copyright � 1998 - 2012 Devart</copyright>
     <tags>Oracle ADO.NET provider Database</tags>
+    <references>
+      <reference file="Devart.Data.dll" />
+      <reference file="Devart.Data.Oracle.dll" />
+    </references>
   </metadata>
 </package>
