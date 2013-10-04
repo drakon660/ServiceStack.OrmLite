@@ -1,12 +1,10 @@
 ﻿using IBM.Data.DB2;
-using ServiceStack.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using ServiceStack.Common;
 using System.Globalization;
 using System.Threading;
 using ServiceStack.Text;
@@ -29,7 +27,7 @@ namespace ServiceStack.OrmLite.DB2
 
             return new DB2Connection(connectionString);
         }
-        
+
         internal long LastInsertId { get; set; }
 
         public override long GetLastInsertId(IDbCommand dbCmd)
@@ -39,7 +37,7 @@ namespace ServiceStack.OrmLite.DB2
 
         private string Quote(string name)
         {
-            return string.Format("{0}", name);                
+            return string.Format("{0}", name);
         }
 
         public override string GetQuotedTableName(ModelDefinition modelDef)
@@ -49,7 +47,7 @@ namespace ServiceStack.OrmLite.DB2
 
             return Quote(string.Format("{0}.{1}", modelDef.Schema,
                 NamingStrategy.GetTableName(modelDef.ModelName)));
-        }      
+        }
 
         public override string GetQuotedColumnName(string columnName)
         {
@@ -82,10 +80,10 @@ namespace ServiceStack.OrmLite.DB2
                 }
                 sql.Append(sqlFilter);
             }
-            
+
             return sql.ToString();
         }
-                
+
         public override bool DoesTableExist(IDbCommand dbCmd, string tableName)
         {
             //if (!QuoteNames & !RESERVED.Contains(tableName.ToUpper()))
@@ -113,7 +111,7 @@ namespace ServiceStack.OrmLite.DB2
             var result = dbCmd.GetLongScalar();
             return result > 0;
         }
-        
+
         private object GetNextValue(IDbCommand dbCmd, string schema, string sequence, object value)
         {
             Object retObj;
@@ -134,17 +132,18 @@ namespace ServiceStack.OrmLite.DB2
                 return retObj;
 
             }
-            
-            var sql = string.Format("SELECT NEXTVAL FOR {0} FROM SYSIBM.SYSDUMMY1", Quote(string.Format("{0}.{1}",schema,sequence)));
+
+            var sql = string.Format("SELECT NEXTVAL FOR {0} FROM SYSIBM.SYSDUMMY1", Quote(string.Format("{0}.{1}", schema, sequence)));
             dbCmd.CommandText = sql;
             var result = dbCmd.GetLongScalar();
 
             LastInsertId = result;
             return result;
         }
-
-        public override string ToInsertRowStatement(object objWithProperties, IList<string> insertFields, IDbCommand dbCommand)
+        public override string ToInsertRowStatement(IDbCommand dbCommand, object objWithProperties, ICollection<string> insertFields = null)
         {
+            if (insertFields == null)
+                insertFields = new List<string>();
             var sbColumnNames = new StringBuilder();
             var sbColumnValues = new StringBuilder();
 
@@ -153,7 +152,6 @@ namespace ServiceStack.OrmLite.DB2
 
             foreach (var fieldDef in modelDef.FieldDefinitions)
             {
-
                 if (fieldDef.IsComputed) continue;
                 if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name) && fieldDef.Sequence.IsNullOrEmpty()) continue;
 
@@ -172,19 +170,19 @@ namespace ServiceStack.OrmLite.DB2
                     }
 
                     PropertyInfo pi = tableType.GetProperty(fieldDef.Name,
-                        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);                    
+                        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
 
                     var result = GetNextValue(dbCommand, modelDef.Schema, fieldDef.Sequence, pi.GetValue(objWithProperties, new object[] { }));
                     if (pi.PropertyType == typeof(String))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, result.ToString());
+                        pi.SetProperty(objWithProperties,result.ToString());
                     else if (pi.PropertyType == typeof(Int16))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt16(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt16(result));
                     else if (pi.PropertyType == typeof(Int32))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt32(result));
+                        pi.SetProperty(objWithProperties,Convert.ToInt32(result));
                     else if (pi.PropertyType == typeof(Guid))
-                        ReflectionUtils.SetProperty(objWithProperties, pi, result);
+                        pi.SetProperty(objWithProperties, result);
                     else
-                        ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt64(result));
+                        pi.SetProperty(objWithProperties, Convert.ToInt64(result));
                 }
 
                 if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
@@ -209,6 +207,72 @@ namespace ServiceStack.OrmLite.DB2
 
             return sql;
         }
+        //public override string ToInsertRowStatement(IDbCommand dbCommand, object objWithProperties, IList<string> insertFields =null)
+        //{
+        //    var sbColumnNames = new StringBuilder();
+        //    var sbColumnValues = new StringBuilder();
+
+        //    var tableType = objWithProperties.GetType();
+        //    var modelDef = GetModel(tableType);
+
+        //    foreach (var fieldDef in modelDef.FieldDefinitions)
+        //    {
+
+        //        if (fieldDef.IsComputed) continue;
+        //        if (insertFields.Count > 0 && !insertFields.Contains(fieldDef.Name) && fieldDef.Sequence.IsNullOrEmpty()) continue;
+
+        //        if ((fieldDef.AutoIncrement || !string.IsNullOrEmpty(fieldDef.Sequence)
+        //            || fieldDef.Name == OrmLiteConfig.IdField)
+        //            && dbCommand != null)
+        //        {
+
+        //            if (fieldDef.AutoIncrement && string.IsNullOrEmpty(fieldDef.Sequence))
+        //            {
+        //                fieldDef.Sequence = Sequence(
+        //                    (modelDef.IsInSchema
+        //                        ? modelDef.Schema + "_" + NamingStrategy.GetTableName(modelDef.ModelName)
+        //                        : NamingStrategy.GetTableName(modelDef.ModelName)),
+        //                    fieldDef.FieldName, fieldDef.Sequence);
+        //            }
+
+        //            PropertyInfo pi = tableType.GetProperty(fieldDef.Name,
+        //                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);                    
+
+        //            var result = GetNextValue(dbCommand, modelDef.Schema, fieldDef.Sequence, pi.GetValue(objWithProperties, new object[] { }));
+        //            if (pi.PropertyType == typeof(String))
+        //                ReflectionUtils.SetProperty(objWithProperties, pi, result.ToString());
+        //            else if (pi.PropertyType == typeof(Int16))
+        //                ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt16(result));
+        //            else if (pi.PropertyType == typeof(Int32))
+        //                ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt32(result));
+        //            else if (pi.PropertyType == typeof(Guid))
+        //                ReflectionUtils.SetProperty(objWithProperties, pi, result);
+        //            else
+        //                ReflectionUtils.SetProperty(objWithProperties, pi, Convert.ToInt64(result));
+        //        }
+
+        //        if (sbColumnNames.Length > 0) sbColumnNames.Append(",");
+        //        if (sbColumnValues.Length > 0) sbColumnValues.Append(",");
+
+        //        try
+        //        {
+        //            sbColumnNames.Append(string.Format("{0}", GetQuotedColumnName(fieldDef.FieldName)));
+        //            if (!string.IsNullOrEmpty(fieldDef.Sequence) && dbCommand == null)
+        //                sbColumnValues.Append(string.Format("@{0}", fieldDef.Name));
+        //            else
+        //                sbColumnValues.Append(fieldDef.GetQuotedValue(objWithProperties));
+        //        }
+        //        catch (Exception)
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    var sql = string.Format("INSERT INTO {0} ({1}) VALUES ({2}) ",
+        //                            GetQuotedTableName(modelDef), sbColumnNames, sbColumnValues);
+
+        //    return sql;
+        //}
 
         public override string GetQuotedValue(object value, Type fieldType)
         {
@@ -216,7 +280,7 @@ namespace ServiceStack.OrmLite.DB2
 
 
             if (fieldType == typeof(DateTime) || fieldType == typeof(DateTime?))
-            {               
+            {
                 var dateValue = (DateTime)value;
                 string db224Format = "YYYY-MM-DD HH24:MI:SS.FF3";
                 string iso8601Format = "yyyy-MM-dd HH:mm:ss.fff";
@@ -250,7 +314,7 @@ namespace ServiceStack.OrmLite.DB2
 
             return ShouldQuoteValue(fieldType)
                     ? OrmLiteConfig.DialectProvider.GetQuotedParam(value.ToString())
-                    : value.ToString();                    
+                    : value.ToString();
         }
 
         public override bool ShouldQuoteValue(Type fieldType)
@@ -261,7 +325,7 @@ namespace ServiceStack.OrmLite.DB2
                 fieldDefinition = this.GetUndefinedColumnDefinition(fieldType, null);
             }
 
-            return 
+            return
                    fieldDefinition == StringColumnDefinition;
         }
 
@@ -355,6 +419,6 @@ namespace ServiceStack.OrmLite.DB2
             }
 
             return sql.ToString();
-        }       
+        }
     }
 }
