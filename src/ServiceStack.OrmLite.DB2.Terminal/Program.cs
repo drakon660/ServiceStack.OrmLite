@@ -11,31 +11,34 @@ namespace ServiceStack.OrmLite.DB2.Terminal
 {
     class Program
     {
-        protected static string ConnectionString = "Server=192.168.141.137:50000;Database=SAMPLE;UID=admin;PWD=fruy4brEC;";
+        protected static string ConnectionString = "Server=10.48.93.152:8585;Database=BASICKOR;User ID=pl43061;Password=a12b3cQWU;Pooling=true;Connection Lifetime=60;";
         protected OrmLiteConnectionFactory factory;
         private static object Employee;
 
         static void Main(string[] args)
         {
            OrmLiteConfig.DialectProvider = DB2OrmLiteDialectProvider.Instance;
-           using (IDbConnection conn = ConnectionString.OpenDbConnection())
-           {
+          
                //var emp = conn.Select<Employee>(q=>q.Sex == Sex.F);
 
                //string lastSql = conn.GetLastSql();
                try
                {
-                   BatchLog log = conn.Id<BatchLog>(1);
-                   log.BatchStart = DateTime.Now;
-                   //log.Parameters = "TCS4";
+                   using (IDbConnection conn = ConnectionString.OpenDbConnection())
+                   {
+                       using (var transaction = conn.OpenTransaction())
+                       {                           
+                           string @in = Sql.colIn("userid",new []{85});
 
-                   conn.Save(log);
+                           conn.Update(table: "AP.User", set: "IsActive={0}".Params("N"), where: @in);
+                                                      
+                           //conn.ExecuteNonQuery("update ap.user set isactive='N' where userid=85");
 
-                   //BatchLog log = BatchLog.Default;
-                   //log.BatchType = "TCS";
-                   //log.Parameters = "TCS4";
+                           transaction.Rollback();
 
-                   //conn.Insert(log);
+                           var sql = conn.GetLastSql();
+                       }
+                   }
                }
                catch (Exception e)
                {
@@ -82,14 +85,7 @@ namespace ServiceStack.OrmLite.DB2.Terminal
                //});
 
                //var sql = conn.GetLastSql();
-               //conn.UpdateOnly(new Employee { WorkDept = "E66" }, p => p.WorkDept, p => p.FirstName.Contains("Drakon"));
-
-               
-           }
-
-           Expression<Func<Employee,bool>> expression = q=>q.Sex == Sex.M;
-
-           var func = expression.Compile(); 
+               //conn.UpdateOnly(new Employee { WorkDept = "E66" }, p => p.WorkDept, p => p.FirstName.Contains("Drakon"));                            
         }
     }
 

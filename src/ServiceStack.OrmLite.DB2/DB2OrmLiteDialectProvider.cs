@@ -50,6 +50,11 @@ namespace ServiceStack.OrmLite.DB2
                 NamingStrategy.GetTableName(modelDef.ModelName)));
         }
 
+        public override string GetQuotedTableName(string tableName)
+        {
+            return Quote(tableName);
+        }
+
         public override string GetQuotedColumnName(string columnName)
         {
             return Quote(columnName);
@@ -319,6 +324,10 @@ namespace ServiceStack.OrmLite.DB2
             return ShouldQuoteValue(fieldType)
                     ? OrmLiteConfig.DialectProvider.GetQuotedParam(value.ToString())
                     : value.ToString();
+        }
+        public override string GetQuotedParam(string paramValue)
+        {
+            return base.GetQuotedParam(paramValue);
         }
 
         public override bool ShouldQuoteValue(Type fieldType)
