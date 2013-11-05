@@ -19,4 +19,4 @@ using System.Runtime.CompilerServices;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 
-[assembly: AssemblyVersion("4.0.60.0")]
+[assembly: AssemblyVersion("4.0.60.1")]
